@@ -41,7 +41,6 @@ class OMXeditorApp(wx.App):
     def setStatusbarText(self, text, number=0):
         self.frame.SetStatusText(text, number)
 
-
-if __name__ == '__main__':
+def main():
     app = OMXeditorApp(redirect=False)
     app.MainLoop()

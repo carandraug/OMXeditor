@@ -219,7 +219,7 @@ def printInfo(dataDoc):
 ##########################################################
 # this function is used when editor is invoked as a script
 ##########################################################
-if __name__ == '__main__':
+def main ():
     """
     editor can be invoked as a script, passing in Mrc file paths
     and flags to run specific jobs.

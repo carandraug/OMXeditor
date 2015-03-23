@@ -297,7 +297,7 @@ class SimplexAlign(threading.Thread):
             pass
         return coords
 
-if __name__ == '__main__':
+def main():
     import matplotlib.pyplot as plt
     testDoc = datadoc.DataDoc('./test/testData.dv')
     testDoc.image.Mrc.info()
