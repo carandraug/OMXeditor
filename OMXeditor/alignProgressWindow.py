@@ -1,5 +1,4 @@
 import matplotlib
-matplotlib.use('WXAgg')
 import numpy
 import pylab
 import wx
@@ -35,8 +34,7 @@ class AlignProgressWindow(wx.Frame):
         self.axes.set_title('Alignment progress', size = 12)
         self.axes.set_xlabel('Iterations')
         self.axes.set_ylabel('1 - correlation coefficient')
-        pylab.setp(self.axes.get_xticklabels(), fontsize = 8)
-        pylab.setp(self.axes.get_yticklabels(), fontsize = 8)
+        self.axes.tick_params(axis='both', labelsize = 8)
 
         ## Results of calling self.axes.plot
         self.plotData = []
