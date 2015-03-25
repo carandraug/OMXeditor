@@ -3,9 +3,11 @@
 
 import setuptools
 
+import OMXeditor
+
 setuptools.setup (
   name      = "OMXeditor",
-  version   = "2.6-dev",
+  version   = OMXeditor.__version__,
   packages  = setuptools.find_packages (),
 
   entry_points = {

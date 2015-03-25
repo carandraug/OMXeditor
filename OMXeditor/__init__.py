@@ -5,11 +5,14 @@ import wx
 
 import mainWindow
 
+__version__ = "2.6-dev"
+
+
 ## The requisite WX App instance; this just creates the main window and 
 # passes it any files that were specified in the commandline.
 class OMXeditorApp(wx.App):
     def OnInit(self):
-        self.frame = mainWindow.MainWindow('OMX Editor v2.5')
+        self.frame = mainWindow.MainWindow('OMX Editor v' + __version__)
 
         self.frame.Show()
         self.SetTopWindow(self.frame)
