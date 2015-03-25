@@ -1,4 +1,3 @@
-import wx, wx.aui
 import os
 import re
 import sys
@@ -6,10 +5,12 @@ import threading
 import time
 import traceback
 
+import wx
+import wx.aui
 import numpy
-import datadoc
 import scipy.ndimage.filters
 
+import datadoc
 import editor
 import viewerWindow
 import viewControlWindow

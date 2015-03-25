@@ -2,6 +2,7 @@ import matplotlib
 import numpy
 import pylab
 import wx
+
 import util
 
 ## This module shows a window displaying a plot of alignment progress.

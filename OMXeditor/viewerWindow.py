@@ -1,9 +1,9 @@
 import numpy
-import datadoc
-from OpenGL.GL import *
 import OpenGL.GL as GL
 import wx
 import wx.glcanvas
+
+import datadoc
 
 ## Vertical adjustment for the size of the menubar
 VERTICAL_PADDING = 16
@@ -38,7 +38,7 @@ class ViewerWindow(wx.Frame):
         self.SetSize(targetSize)
 
         self.Bind(wx.EVT_SIZE, self.onSize)
-        self.Show()
+        self.Show(True)
 
 
     ## Resize our canvas to fill the window, adjusting zoom factors to suit.
@@ -125,7 +125,7 @@ class GLViewer(wx.glcanvas.GLCanvas):
     def InitGL(self):
         self.w, self.h = self.GetClientSizeTuple()
         self.SetCurrent(self.context)
-        glClearColor(0.3, 0.3, 0.3, 0.0)   ## background color
+        GL.glClearColor(0.3, 0.3, 0.3, 0.0)   ## background color
 
         self.haveInitedGL = True
 
@@ -193,21 +193,21 @@ class GLViewer(wx.glcanvas.GLCanvas):
             
         self.SetCurrent(self.context)
 
-        glViewport(0, 0, self.w, self.h)
-        glMatrixMode (GL_PROJECTION)
-        glLoadIdentity ()
-        glOrtho (0, self.w, 0, self.h, 1., -1.)
-        glMatrixMode (GL_MODELVIEW)
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        glPushMatrix()
-        glLoadIdentity()
+        GL.glViewport(0, 0, self.w, self.h)
+        GL.glMatrixMode (GL.GL_PROJECTION)
+        GL.glLoadIdentity ()
+        GL.glOrtho (0, self.w, 0, self.h, 1., -1.)
+        GL.glMatrixMode (GL.GL_MODELVIEW)
+        GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
+        GL.glPushMatrix()
+        GL.glLoadIdentity()
 
         for image in self.imagesToRefresh:
             image.refresh()
 
         self.imagesToRefresh = set()
 
-        glScalef(self.scaleX, self.scaleY, 1)
+        GL.glScalef(self.scaleX, self.scaleY, 1)
             
         if self.viewManager.getIsViewCropped():
             # Set up some clipping planes based on the relevant portion 
@@ -222,52 +222,52 @@ class GLViewer(wx.glcanvas.GLCanvas):
             plane2 = [1.0, 0.0, 0.0, -lx]
             plane3 = [-1.0, 0.0, 0.0, ux]
             
-            glClipPlane(GL_CLIP_PLANE0, plane0)
-            glEnable(GL_CLIP_PLANE0)
-            glClipPlane(GL_CLIP_PLANE1, plane1)
-            glEnable(GL_CLIP_PLANE1)
-            glClipPlane(GL_CLIP_PLANE2, plane2)
-            glEnable(GL_CLIP_PLANE2)
-            glClipPlane(GL_CLIP_PLANE3, plane3)
-            glEnable(GL_CLIP_PLANE3)
+            GL.glClipPlane(GL.GL_CLIP_PLANE0, plane0)
+            GL.glEnable(GL.GL_CLIP_PLANE0)
+            GL.glClipPlane(GL.GL_CLIP_PLANE1, plane1)
+            GL.glEnable(GL.GL_CLIP_PLANE1)
+            GL.glClipPlane(GL.GL_CLIP_PLANE2, plane2)
+            GL.glEnable(GL.GL_CLIP_PLANE2)
+            GL.glClipPlane(GL.GL_CLIP_PLANE3, plane3)
+            GL.glEnable(GL.GL_CLIP_PLANE3)
         else:
-            glDisable(GL_CLIP_PLANE0)
-            glDisable(GL_CLIP_PLANE1)
-            glDisable(GL_CLIP_PLANE2)
-            glDisable(GL_CLIP_PLANE3)
+            GL.glDisable(GL.GL_CLIP_PLANE0)
+            GL.glDisable(GL.GL_CLIP_PLANE1)
+            GL.glDisable(GL.GL_CLIP_PLANE2)
+            GL.glDisable(GL.GL_CLIP_PLANE3)
 
         ## first, for each image in the list at its particular position,
         ## draw a black rectangle so that the colors can blend
-        glColor3i(0, 0, 0)
+        GL.glColor3i(0, 0, 0)
         for image in self.imgList:
             if image.isVisible:
                 imageData = image.imageData
                 tx, ty, rot, mag = image.dx, image.dy, image.angle, image.zoom
                 cx,cy = imageData.shape[-1]/2., imageData.shape[-2]/2.
-                glPushMatrix()
+                GL.glPushMatrix()
                 # Move so we rotate about the center.
-                glTranslated(cx,cy, 0)
+                GL.glTranslated(cx,cy, 0)
                 if self.axes == (4, 3):   ## mag both dimesions in x-y view
-                    glScaled(mag,mag, 1)
+                    GL.glScaled(mag,mag, 1)
                 elif self.axes == (4, 2):   ## mag only horizontal dimesion in x-z view
-                    glScaled(mag, 1, 1)
+                    GL.glScaled(mag, 1, 1)
                 else:         ## mag only vertical dimesion in z-y view
-                    glScaled(1, mag, 1)
-                glRotated(rot, 0,0,1)
-                glTranslated(tx-cx,ty-cy, 0)
-                glColor3f(0, 0, 0)
-                glBegin(GL_QUADS)
-                glVertex2i(0, 0)
-                glVertex2i(self.pic_nx, 0)
-                glVertex2i(self.pic_nx, self.pic_ny)
-                glVertex2i(0, self.pic_ny)
-                glEnd()
-                glPopMatrix()
+                    GL.glScaled(1, mag, 1)
+                GL.glRotated(rot, 0,0,1)
+                GL.glTranslated(tx-cx,ty-cy, 0)
+                GL.glColor3f(0, 0, 0)
+                GL.glBegin(GL.GL_QUADS)
+                GL.glVertex2i(0, 0)
+                GL.glVertex2i(self.pic_nx, 0)
+                GL.glVertex2i(self.pic_nx, self.pic_ny)
+                GL.glVertex2i(0, self.pic_ny)
+                GL.glEnd()
+                GL.glPopMatrix()
 
         # Now draw each image.
-        glEnable(GL_TEXTURE_2D)
-        glEnable(GL_BLEND)
-        glBlendFunc(GL_ONE, GL_ONE)
+        GL.glEnable(GL.GL_TEXTURE_2D)
+        GL.glEnable(GL.GL_BLEND)
+        GL.glBlendFunc(GL.GL_ONE, GL.GL_ONE)
 
         for image in self.imgList:
             if image.isVisible:
@@ -280,33 +280,33 @@ class GLViewer(wx.glcanvas.GLCanvas):
                     scaleAxes = [1]
                 image.render(scaleAxes)
 
-        glDisable(GL_TEXTURE_2D)
-        glDisable(GL_BLEND)
+        GL.glDisable(GL.GL_TEXTURE_2D)
+        GL.glDisable(GL.GL_BLEND)
 
         # Draw slice lines.
         index = list(self.axes)
         cropBox = [self.dataDoc.cropMin[index], self.dataDoc.cropMax[index]]
         sliceCenter = self.dataDoc.curViewIndex[index]
 
-        glColor3f(.5, .5, .5)
-        glLineWidth(1)
-        glBegin(GL_LINES)
-        glVertex2f(sliceCenter[0], cropBox[0][1])
-        glVertex2f(sliceCenter[0], cropBox[1][1])
-        glVertex2f(cropBox[0][0], sliceCenter[1])
-        glVertex2f(cropBox[1][0], sliceCenter[1])
-        glEnd()
+        GL.glColor3f(.5, .5, .5)
+        GL.glLineWidth(1)
+        GL.glBegin(GL.GL_LINES)
+        GL.glVertex2f(sliceCenter[0], cropBox[0][1])
+        GL.glVertex2f(sliceCenter[0], cropBox[1][1])
+        GL.glVertex2f(cropBox[0][0], sliceCenter[1])
+        GL.glVertex2f(cropBox[1][0], sliceCenter[1])
+        GL.glEnd()
 
         # Draw crop box
-        glBegin(GL_LINE_LOOP)
-        glVertex2f(cropBox[0][0], cropBox[0][1])
-        glVertex2f(cropBox[1][0], cropBox[0][1])
-        glVertex2f(cropBox[1][0], cropBox[1][1])
-        glVertex2f(cropBox[0][0], cropBox[1][1])
-        glEnd()
+        GL.glBegin(GL.GL_LINE_LOOP)
+        GL.glVertex2f(cropBox[0][0], cropBox[0][1])
+        GL.glVertex2f(cropBox[1][0], cropBox[0][1])
+        GL.glVertex2f(cropBox[1][0], cropBox[1][1])
+        GL.glVertex2f(cropBox[0][0], cropBox[1][1])
+        GL.glEnd()
 
-        glFlush()
-        glPopMatrix()
+        GL.glFlush()
+        GL.glPopMatrix()
         self.SwapBuffers()
 
 
@@ -549,16 +549,17 @@ class Image:
         GL.glBindTexture(GL.GL_TEXTURE_2D, self.textureID)
 
         # Define this new texture object based on self.imageData's geometry
-        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER,
-                GL.GL_NEAREST)
-        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER,
-                GL.GL_NEAREST)
+        GL.glTexParameteri(GL.GL_TEXTURE_2D,
+                GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST)
+        GL.glTexParameteri(GL.GL_TEXTURE_2D,
+                GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST)
 
         imgType = self.imageData.dtype.type
         if imgType not in dtypeToGlTypeMap:
             raise ValueError, "Unsupported data mode %s" % str(imgType)
-        GL.glTexImage2D(GL.GL_TEXTURE_2D,0,  GL.GL_RGB, tex_nx,tex_ny, 0,
-                     GL.GL_LUMINANCE, dtypeToGlTypeMap[imgType], None)
+        GL.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_RGB,
+                      tex_nx,tex_ny, 0, GL.GL_LUMINANCE,
+                      dtypeToGlTypeMap[imgType], None)
 
 
     def refresh(self):

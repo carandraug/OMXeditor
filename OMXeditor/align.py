@@ -1,11 +1,13 @@
+import threading
+import time
+
 import numpy
 import scipy
 import scipy.optimize
-import threading
-import time
+import matplotlib.pyplot
+
 import datadoc
 import editor
-
 
 ## Step size multipliers to convince simplex to take differently-sized steps
 # in each parameter. Simplex's initial step size is .00025 -- okay for zoom
@@ -289,16 +291,15 @@ class SimplexAlign(threading.Thread):
         try:
             # test / debug plot of correlation
             print "X,Y translation estimate for channel ", self.index, ": ", coords[0], ",", coords[1]
-            plt.title("correlation for channel %d" % self.index)
-            plt.imshow(correlation)
-            plt.show()
+            matplotlib.pyplot.title("correlation for channel %d" % self.index)
+            matplotlib.pyplot.imshow(correlation)
+            matplotlib.pyplot.show()
         except NameError:
             # HACK: plt not defined, so debug plots not shown (TODO, improve)
             pass
         return coords
 
 def main():
-    import matplotlib.pyplot as plt
     testDoc = datadoc.DataDoc('./test/testData.dv')
     testDoc.image.Mrc.info()
     print "Starting test data auto-alignment..."

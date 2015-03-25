@@ -8,11 +8,13 @@
              Chris Weisiger
 """
 
-import numpy
 import os
 import sys
 import re
 import argparse
+
+import numpy
+
 import align
 import datadoc
 

@@ -1,6 +1,9 @@
+import threading
+
 import wx
 import OpenGL.GL as GL
-import threading
+import matplotlib.backends.backend_agg
+import matplotlib.figure
 
 # key codes: 70=F, 76=L, 84=T, 66=B (as in First, Last, Top, Bottom)
 KEY_MOTION_MAP = {
@@ -75,14 +78,10 @@ def addMenuItem(parent, menu, label, action):
 ## Save an array as an image. Copied from 
 # http://stackoverflow.com/questions/902761/saving-a-numpy-array-as-an-image
 def imsave(filename, array, vmin=None, vmax=None, cmap=None, format=None, origin=None):
-    from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-    from matplotlib.figure import Figure
-
-    fig = Figure(figsize=array.shape[::-1], dpi=1, frameon=False)
-    canvas = FigureCanvas(fig)
+    fig = matplotlib.figure.Figure(figsize=array.shape[::-1], dpi=1, frameon=False)
+    canvas = matplotlib.backends.backend_agg.FigureCanvasAgg(fig)
     fig.figimage(array, cmap=cmap, vmin=vmin, vmax=vmax, origin=origin)
     fig.savefig(filename, dpi=1, format=format)
-  
 
 ## Save out the current OpenGL view as an image.
 def saveGLView(filename):

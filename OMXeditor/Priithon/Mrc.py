@@ -7,6 +7,13 @@ Mrc2 class section wise file/array I/O
 __author__  = "Sebastian Haase <haase@msg.ucsf.edu>"
 __license__ = "BSD license - see LICENSE file"
 
+import os
+import __builtin__
+import weakref
+import sys
+import string
+import math
+
 import numpy as N
 
 def bindFile(fn, writable=0):
@@ -27,7 +34,6 @@ class Mrc:
     def __init__(self, path, mode='r', extHdrSize=0, extHdrNints=0, extHdrNfloats=0):
         '''mode can be 'r' or 'r+'
         '''
-        import os
         self.path     = os.path.abspath(path)
         self.filename = os.path.basename(path)
 
@@ -193,7 +199,6 @@ class Mrc:
     def data_withMrc(self, fn):
         """use this to get 'spiffed up' array"""
 
-        import weakref
         class ndarray_inMrcFile(N.ndarray):
             def __array_finalize__(self,obj):
                 self.Mrc = getattr(obj, 'Mrc', None)
@@ -258,7 +263,6 @@ def save(a, fn, ifExists='ask', zAxisOrder=None,
 
     TODO: not implemented yet, extInts=None, extFloats=None
     '''
-    import os
     if os.path.exists(fn):
         if ifExists[0] == 'o':
             pass
@@ -300,7 +304,6 @@ def save(a, fn, ifExists='ask', zAxisOrder=None,
         raise NotImplementedError, "todo: implement ext hdr"
 
     if hdrEval:
-        import sys
         fr = sys._getframe(1)
         loc = { 'hdr' : m.hdr }
         loc.update(fr.f_locals)
@@ -344,7 +347,6 @@ class Mrc2:
             'r+'  read-write
             'w'   write - erases old file !!
         '''
-        import os, __builtin__
         self._f = __builtin__.open(path, mode+'b')
         self._path = path
         self._name = os.path.basename(path)
@@ -390,7 +392,6 @@ class Mrc2:
             else:
                 zAxisOrder = 'tzw'
         else:
-            import string
             # remove delimiter characters '-., '
             zAxisOrder = zAxisOrder.translate(
                 string.join([chr(i) for i in range(256)],''), '-., ').lower()
@@ -584,7 +585,6 @@ class Mrc2:
 def minExtHdrSize(nSecs, bytesPerSec):
     '''return smallest multiple of 1024 to fit extHdr data
     '''
-    import math
     return int( math.ceil(nSecs * bytesPerSec / 1024.)*1024 )
 
 
@@ -697,7 +697,6 @@ def makeHdrArray(buffer=None):
     if buffer is not None:
         h=buffer
         h.dtype = mrcHdr_dtype
-        import weakref
         h = weakref.proxy( h )
     else:
         h = N.recarray(1, mrcHdr_dtype)

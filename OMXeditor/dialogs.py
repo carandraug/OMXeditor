@@ -1,6 +1,8 @@
-import numpy
 import os
+
+import numpy
 import wx
+
 import datadoc
 import util
 

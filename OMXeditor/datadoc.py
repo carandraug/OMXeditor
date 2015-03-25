@@ -1,7 +1,7 @@
-import Priithon.Mrc as Mrc
-
 import numpy
 import scipy.ndimage
+
+import Priithon.Mrc
 
 ## Maps dimensional axes to their labels.
 DIMENSION_LABELS = ['Wavelength', 'Time', 'Z', 'Y', 'X']
@@ -22,12 +22,12 @@ class DataDoc:
         ## gb, Oct2012 - load an Mrc file here in DataDoc - previously this 
         #  Class  was initialized with an existing Mrc object.
         #  Note an Mrc object is not just a numpy ndarray of pixels.
-        image = Mrc.bindFile(MRC_path) 
+        image = Priithon.Mrc.bindFile(MRC_path)
         self.image = image
 
         ## Header for the image data, which tells us e.g. what the ordering
         # of X/Y/Z/time/wavelength is in the MRC file.
-        self.imageHeader = Mrc.implement_hdr(image.Mrc.hdr._array.copy())
+        self.imageHeader = Priithon.Mrc.implement_hdr(image.Mrc.hdr._array.copy())
         ## Location the file is saved on disk.
         self.filePath = image.Mrc.path
 
@@ -449,8 +449,8 @@ class DataDoc:
                     self.size[3], self.size[4] ], dtype = numpy.int)
 
         # make a new header
-        newHeader = Mrc.makeHdrArray()
-        Mrc.initHdrArrayFrom(newHeader, self.imageHeader)
+        newHeader = Priithon.Mrc.makeHdrArray()
+        Priithon.Mrc.initHdrArrayFrom(newHeader, self.imageHeader)
         newHeader.Num = (self.size[4], self.size[3], 
                 self.size[2] * len(timepoints) * len(wavelengths))
         newHeader.NumTimes = len(timepoints)
@@ -459,7 +459,7 @@ class DataDoc:
         newHeader.next = 0
         # Ordering of data in the file; 2 means z/w/t
         newHeader.ImgSequence = 2
-        newHeader.PixelType = Mrc.dtype2MrcMode(numpy.float32)
+        newHeader.PixelType = Priithon.Mrc.dtype2MrcMode(numpy.float32)
 
         if not savePath:
             outputArray = numpy.empty(newShape, numpy.float32)
@@ -516,8 +516,8 @@ class DataDoc:
         croppedShape[0], croppedShape[1] = croppedShape[1], croppedShape[0]
         croppedShape = tuple(croppedShape)
 
-        newHeader = Mrc.makeHdrArray()
-        Mrc.initHdrArrayFrom(newHeader, self.imageHeader)
+        newHeader = Priithon.Mrc.makeHdrArray()
+        Priithon.Mrc.initHdrArrayFrom(newHeader, self.imageHeader)
         newHeader.Num = (croppedShape[4], croppedShape[3], 
                 croppedShape[2] * len(timepoints) * len(wavelengths))
         newHeader.NumTimes = len(timepoints)
@@ -526,7 +526,7 @@ class DataDoc:
         newHeader.next = 0
         # Ordering of data in the file; 2 means z/w/t
         newHeader.ImgSequence = 2
-        newHeader.PixelType = Mrc.dtype2MrcMode(numpy.float32)
+        newHeader.PixelType = Priithon.Mrc.dtype2MrcMode(numpy.float32)
 
         if not savePath:
             outputArray = numpy.empty(croppedShape, numpy.float32)

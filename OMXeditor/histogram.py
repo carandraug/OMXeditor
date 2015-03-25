@@ -1,5 +1,5 @@
 import numpy
-from OpenGL.GL import *
+import OpenGL.GL as GL
 import wx
 import wx.glcanvas
 
@@ -80,43 +80,43 @@ class HistogramCanvas(wx.glcanvas.GLCanvas):
         
         if not self.haveInitedOpenGL:
             self.width, self.height = self.GetClientSizeTuple()
-            glClearColor(0, 0, 0, 0)
+            GL.glClearColor(0, 0, 0, 0)
             self.haveInitedOpenGL = True
 
-        glViewport(0, 0, self.width, self.height)
-        glMatrixMode(GL_PROJECTION)
-        glLoadIdentity()
-        glOrtho(0, self.width, 0, self.height, 1, -1)
-        glMatrixMode(GL_MODELVIEW)
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        GL.glViewport(0, 0, self.width, self.height)
+        GL.glMatrixMode(GL.GL_PROJECTION)
+        GL.glLoadIdentity()
+        GL.glOrtho(0, self.width, 0, self.height, 1, -1)
+        GL.glMatrixMode(GL.GL_MODELVIEW)
+        GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
 
         # Draw a gradient background
-        glBegin(GL_QUADS)
-        glColor3fv(self.color)
-        glVertex2f(0, 0)
-        glVertex2f(self.width, 0)
-        glColor3f(1, 1, 1)
-        glVertex2f(self.width, self.height)
-        glVertex2f(0, self.height)
-        glEnd()
+        GL.glBegin(GL.GL_QUADS)
+        GL.glColor3fv(self.color)
+        GL.glVertex2f(0, 0)
+        GL.glVertex2f(self.width, 0)
+        GL.glColor3f(1, 1, 1)
+        GL.glVertex2f(self.width, self.height)
+        GL.glVertex2f(0, self.height)
+        GL.glEnd()
 
         # Draw a quad for each bin
-        glBegin(GL_QUADS)
-        glColor3f(0, 0, 0)
+        GL.glBegin(GL.GL_QUADS)
+        GL.glColor3f(0, 0, 0)
         binWidth = self.width / float(self.numBins)
         maxVal = max(self.binSizes)
         for i, size in enumerate(self.binSizes):
             if size:
                 xOff = i * binWidth
                 height = size / float(maxVal) * self.height
-                glVertex2f(xOff, 0)
-                glVertex2f(xOff + binWidth, 0)
-                glVertex2f(xOff + binWidth, height)
-                glVertex2f(xOff, height)
-        glEnd()
+                GL.glVertex2f(xOff, 0)
+                GL.glVertex2f(xOff + binWidth, 0)
+                GL.glVertex2f(xOff + binWidth, height)
+                GL.glVertex2f(xOff, height)
+        GL.glEnd()
 
         # Draw marks for the black and white points
-        glColor3f(0, 0, 0)
+        GL.glColor3f(0, 0, 0)
 
         # The horizontal position of the marks are based on our
         # black and white points, and are positioned independent
@@ -124,12 +124,12 @@ class HistogramCanvas(wx.glcanvas.GLCanvas):
         for val, sign in [(self.blackPoint, 1), (self.whitePoint, -1)]:
             # Offset by 1 pixel to ensure we stay in-bounds even with min/max values
             xOff = val * self.width + sign
-            glBegin(GL_LINE_STRIP)
-            glVertex2f(xOff + sign * 5, 2)
-            glVertex2f(xOff, 2)
-            glVertex2f(xOff, self.height - 2)
-            glVertex2f(xOff + sign * 5, self.height - 2)
-            glEnd()
+            GL.glBegin(GL.GL_LINE_STRIP)
+            GL.glVertex2f(xOff + sign * 5, 2)
+            GL.glVertex2f(xOff, 2)
+            GL.glVertex2f(xOff, self.height - 2)
+            GL.glVertex2f(xOff + sign * 5, self.height - 2)
+            GL.glEnd()
 
         self.SwapBuffers()
 
