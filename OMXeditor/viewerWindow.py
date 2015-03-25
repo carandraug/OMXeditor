@@ -38,7 +38,6 @@ class ViewerWindow(wx.Frame):
         self.SetSize(targetSize)
 
         self.Bind(wx.EVT_SIZE, self.onSize)
-        self.Show(True)
 
 
     ## Resize our canvas to fill the window, adjusting zoom factors to suit.

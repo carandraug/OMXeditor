@@ -362,11 +362,10 @@ class ControlPanel(wx.Panel):
             # Have more than one Z slice, so show the Z views.
             axes.extend([(4, 2), (2, 3)])
         for axesPair in axes:
-            self.windows.append(viewerWindow.ViewerWindow(self, 
-                            axes = axesPair,
-                            dataDoc = self.dataDoc,
-                    )
-            )
+            window = viewerWindow.ViewerWindow(self, axes = axesPair,
+                                               dataDoc = self.dataDoc)
+            window.Show(True)
+            self.windows.append(window)
 
         # Adjust window positions - parent moved right for new window0
         base = self.parent.origPos
