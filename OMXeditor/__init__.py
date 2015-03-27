@@ -13,10 +13,15 @@ __version__ = "2.6-dev"
 class OMXeditorApp(wx.App):
     def OnInit(self):
         self.frame = mainWindow.MainWindow('OMX Editor v' + __version__)
-
+        wx.CallAfter(self.onRun)
         self.frame.Show()
         self.SetTopWindow(self.frame)
+        return True
 
+    ## We want to run this only after we are in the MainLoop.  Otherwise,
+    # if the first image causes any issue, we will crash rather than having
+    # it caught by the MainLoop to be processed.
+    def onRun(self):
         haveFilesToOpen = False
         for file in sys.argv[1:]:
             # When invoking this program as a standalone bundled app with 
@@ -30,8 +35,6 @@ class OMXeditorApp(wx.App):
             # Instead of just popping up a blank window, show an open-file
             # dialog.
             self.frame.OnFileOpen()
-
-        return True
 
     def setStatusbarText(self, text, number=0):
         self.frame.SetStatusText(text, number)
