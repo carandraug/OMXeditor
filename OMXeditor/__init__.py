@@ -12,7 +12,7 @@ __version__ = "2.6-dev"
 # passes it any files that were specified in the commandline.
 class OMXeditorApp(wx.App):
     def OnInit(self):
-        self.frame = mainWindow.MainWindow('OMX Editor v' + __version__)
+        self.frame = mainWindow.MainWindow(title = 'OMX Editor v' + __version__)
         wx.CallAfter(self.onRun)
         self.frame.Show()
         self.SetTopWindow(self.frame)

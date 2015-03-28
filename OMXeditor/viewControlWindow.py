@@ -111,7 +111,7 @@ class ViewControlWindow(wx.Frame):
                 0, wx.ALL, 5)
         
         slider = wx.Slider(self, -1, 0, 0, self.dataDoc.size[axis] - 1,
-                size = wx.Size(200, -1),
+                size = (200, -1),
                 style = wx.SL_HORIZONTAL | wx.SL_LABELS | wx.SL_AUTOTICKS)
         slider.SetValue(self.parent.getViewAxisIndex(axis))
         slider.Bind(wx.EVT_SLIDER, 

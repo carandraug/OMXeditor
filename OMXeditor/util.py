@@ -68,13 +68,6 @@ def addHelperString(parent, sizer, text, border = 0, flags = wx.ALL):
     sizer.Add(label, 0, flags, border)
 
 
-## Create a new menu item and insert it into the given menu.
-def addMenuItem(parent, menu, label, action):
-    item = wx.MenuItem(menu, -1, label)
-    parent.Bind(wx.EVT_MENU, action, id = item.GetId())
-    menu.AppendItem(item)
-
-
 ## Save an array as an image. Copied from 
 # http://stackoverflow.com/questions/902761/saving-a-numpy-array-as-an-image
 def imsave(filename, array, vmin=None, vmax=None, cmap=None, format=None, origin=None):
