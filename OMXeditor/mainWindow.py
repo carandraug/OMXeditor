@@ -52,7 +52,7 @@ class MainWindow(wx.Frame):
         self.origPos = self.GetPosition() # use when opening new files
 
     def create_menu_bar(self):
-        """Creates menu bar and returns MenuItems that require an open file"""
+        """Creates menu bar and returns MenuItems that require an open file."""
         menuBar = wx.MenuBar()
         MenuItems_that_require_open_file = []
 
@@ -166,7 +166,7 @@ class MainWindow(wx.Frame):
     def OnQuit(self, event):
         self.Close()
 
-    def OnFileOpen(self,event = None):
+    def OnFileOpen(self, event = None):
         dialog = wx.FileDialog(self, message = "Select files to open",
                                wildcard = ("DV and MRC files|*.dv;*.mrc|"
                                            "All files|*"),
@@ -235,10 +235,12 @@ class MainWindow(wx.Frame):
     def OnFileSaveAs(self, panel, event):
         pageIndex = self.controlPanelsNotebook.GetSelection()
 
-        caption = self.controlPanelsNotebook.GetPageText(pageIndex)
-        fd = wx.FileDialog(self, "Save as ...",
-                           caption, caption,
-                           style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
+        default_dir   = os.path.dirname (panel.getFilePath())
+        default_file  = self.controlPanelsNotebook.GetPageText(pageIndex)
+
+        fd = wx.FileDialog(self, message = "Save as...",
+                           defaultDir = default_dir, defaultFile = default_file,
+                           style = wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
         if fd.ShowModal() == wx.ID_OK:
             targetPath = fd.GetPath()
             panel.dataDoc.alignAndCrop(savePath = targetPath)
@@ -246,7 +248,6 @@ class MainWindow(wx.Frame):
             self.controlPanelsNotebook.AddPage(
                     ControlPanel(self, doc_to_edit),
                     os.path.basename(targetPath), select=True)
-
 
     @requires_panel
     def OnViewControls(self, panel, event):
@@ -276,7 +277,6 @@ class MainWindow(wx.Frame):
     def OnBatchProcess(self, panel, event):
         dialogs.BatchDialog(self, panel)
 
-
     def OnAbout(self, event):
         info = wx.AboutDialogInfo()
         info.SetName("OMX Editor")
@@ -303,22 +303,18 @@ class MainWindow(wx.Frame):
                 self.controlPanelsNotebook.SetSelection(i)
                 return
 
-        if os.path.isdir(filename):
-            return # Do nothing for directories
-        else:
-            try:
-                doc_to_edit = datadoc.DataDoc(filename)
-            except Exception, e:
-                wx.MessageBox(message = ("Failed to open file: %s\n\n%s"
-                                         % (e, traceback.format_exc())),
-                              caption = 'Failed to open file',
-                              style = wx.OK | wx.ICON_ERROR)
-                return
+        try:
+            doc_to_edit = datadoc.DataDoc(filename)
+        except Exception, e:
+            wx.MessageBox(message = ("Failed to open file: %s\n\n%s"
+                                     % (e, traceback.format_exc())),
+                          caption = 'Failed to open file',
+                          style = wx.OK | wx.ICON_ERROR)
+            return
 
-            newPanel = ControlPanel(self, doc_to_edit)
-            self.controlPanelsNotebook.AddPage(
-                    newPanel,
-                    os.path.basename(filename), select=True)
+        self.controlPanelsNotebook.AddPage(ControlPanel(self, doc_to_edit),
+                                           os.path.basename(filename),
+                                           select = True)
 
 
 ## A simple class to handle dragging and dropping files onto the main window.
