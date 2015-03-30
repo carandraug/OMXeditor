@@ -44,7 +44,6 @@ class MainWindow(wx.Frame):
         self.controlPanelsNotebook.SetDropTarget(FileDropper(self))  # main area
 
         self.on_notebook_change()
-        self.origPos = self.GetPosition() # use when opening new files
 
     def create_menu_bar(self):
         """Creates menu bar and returns MenuItems that require an open file."""
@@ -327,11 +326,8 @@ class FileDropper(wx.FileDropTarget):
 
 ## This panel provides an interface for viewing and editing an MRC file
 class ControlPanel(wx.Panel):
-    def __init__(self, parent, imageDoc,
-                 id = wx.ID_ANY, pos = wx.DefaultPosition,
-                 size = wx.DefaultSize):
-        wx.Panel.__init__(self, parent, id, style=wx.SP_NOBORDER)
-        self.parent = parent
+    def __init__(self, parent, imageDoc, *args, **kwargs):
+        wx.Panel.__init__(self, parent, *args, **kwargs)
 
         self.shouldProject = False
         ## Contains all the information on the displayed image
@@ -370,20 +366,15 @@ class ControlPanel(wx.Panel):
             window.Show()
             self.windows.append(window)
 
-        # Adjust window positions - parent moved right for new window0
-        base = self.parent.origPos
-        self.windows[0].SetPosition( base )
-        rect = self.windows[0].GetRect()
-        self.windows[0].SetPosition( (rect[0]-rect[2], rect[1]) )
+        ## Adjust window positions.  The parent window is left to the user,
+        # and the main viewer window (XY) is left to wx. Only if we have XZ
+        # and XY views, indices 1 and 2 respectively, do we make adjustments.
         if len(self.windows) > 1:
-            # We have the XZ and YZ views, so we need to position them too.
-            self.windows[1].SetPosition( (rect[0]-rect[2], rect[1] + rect[3]) )
+            rect0 = self.windows[0].GetRect()
             rect2 = self.windows[2].GetRect()
-            self.windows[2].SetPosition( (rect[0]-rect[2]-rect2[2], rect[1]) )
-        # move the parent last because the other windows move with it (Mac)
-        self.parent.SetPosition( (rect[0]+rect[2], rect[1]) )
-
-        self.setParentSize()
+            self.windows[0].SetPosition((rect0[0] + rect2[2], rect0[1]))
+            self.windows[1].SetPosition((rect0[0] + rect2[2], rect0[1] + rect0[3]))
+            self.windows[2].SetPosition((rect0[0], rect0[1]))
 
         ## List of canvases showing actual pixels, held in each window.
         self.viewers = [window.viewer for window in self.windows]
@@ -462,6 +453,7 @@ class ControlPanel(wx.Panel):
         ## Get the viewers' min/max values initialized properly.
         self.setViewerScalings()
 
+        self.setParentSize()
 
     ## Make the panel for cropping.
     def makeCropPanel(self):
@@ -587,7 +579,7 @@ class ControlPanel(wx.Panel):
                 "a large number of files."
         )
         batchButton.Bind(wx.EVT_BUTTON, lambda event: dialogs.BatchDialog(
-                self.parent, self))
+                self.GetParent(), self))
         rowSizer.Add(batchButton, 0, wx.LEFT | wx.BOTTOM, 10)
         splitMergeButton = wx.Button(panel, -1, "Split/Merge")
         self.prepHelpText(splitMergeButton, "Split/Merge data",
@@ -1211,13 +1203,13 @@ class ControlPanel(wx.Panel):
         self.viewControlWindow.Show(isVisible and self.wasViewsWindowShown)
         if isVisible:
             self.setParentSize()
-            self.parent.Raise()
+            self.GetParent().Raise()
 
 
     ## Adjust the height of our parent so that it can contain all of our
     # wavelength controls.
     def setParentSize(self):
-        self.parent.SetSize((-1, 250 + 111 * self.dataDoc.numWavelengths))
+        self.GetParent().SetSize((-1, 250 + 111 * self.dataDoc.numWavelengths))
 
 
 ## This class is a small panel that contains alignment parameter controls
