@@ -321,18 +321,6 @@ class MainWindow(wx.Frame):
                     os.path.basename(filename), select=True)
 
 
-    def getDocs(self):
-        """
-        Returns an up-to-date list of DataDoc references for all open files.
-        """
-        dataDocs = []
-        for i in range(self.controlPanelsNotebook.GetPageCount()):
-            panel = self.controlPanelsNotebook.GetPage(i)
-            doc = panel.dataDoc
-            dataDocs.append(doc)
-        return dataDocs
-
-
 ## A simple class to handle dragging and dropping files onto the main window.
 class FileDropper(wx.FileDropTarget):
     def __init__(self, parent):
