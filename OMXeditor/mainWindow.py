@@ -30,16 +30,11 @@ class MainWindow(wx.Frame):
     def __init__(self, parent=None, *args, **kwargs):
         wx.Frame.__init__(self, parent = parent, *args, **kwargs)
 
-        self.auiManager = wx.aui.AuiManager()
-        self.auiManager.SetManagedWindow(self)
-
         self.controlPanelsNotebook = wx.aui.AuiNotebook(self)
-        self.auiManager.AddPane(self.controlPanelsNotebook)
         self.Bind(wx.aui.EVT_AUINOTEBOOK_PAGE_CHANGED,
                   self.OnNotebookPageChanged)
         self.Bind(wx.aui.EVT_AUINOTEBOOK_PAGE_CLOSED,
                   self.OnNotebookPageClosed)
-        self.auiManager.Update()
 
         self.MenuItems_that_require_open_file = self.create_menu_bar()
 
