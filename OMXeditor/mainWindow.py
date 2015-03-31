@@ -37,6 +37,7 @@ class MainWindow(wx.Frame):
                   self.OnNotebookPageClosed)
 
         self.MenuItems_that_require_open_file = self.create_menu_bar()
+        self.ToolBarTools_that_require_open_file = self.create_tool_bar()
 
         self.statusbar = self.CreateStatusBar(1)  # status bar (mouse pos etc.)
 
@@ -50,7 +51,7 @@ class MainWindow(wx.Frame):
         menuBar = wx.MenuBar()
         MenuItems_that_require_open_file = []
 
-        def add_menu_item(menu, slot, id=wx.ID_ANY, require_open = False,
+        def add_menu_item(menu, slot, id = wx.ID_ANY, require_open = True,
                           *args, **kwargs):
             menu_entry = menu.Append(id, *args, **kwargs)
             self.Bind(wx.EVT_MENU, slot, menu_entry)
@@ -58,45 +59,63 @@ class MainWindow(wx.Frame):
                 MenuItems_that_require_open_file.append(menu_entry)
 
         fileMenu = wx.Menu()
-        menuBar.Append(fileMenu, 'File')
-        add_menu_item(fileMenu, self.OnFileOpen, wx.ID_OPEN)
-        add_menu_item(fileMenu, self.OnFileSave, wx.ID_SAVE,
-                      require_open = True)
-        add_menu_item(fileMenu, self.OnFileSaveAs, wx.ID_SAVEAS,
-                      require_open = True)
+        menuBar.Append(fileMenu, '&File')
+        add_menu_item(fileMenu, self.OnFileOpen, wx.ID_OPEN,
+                      require_open = False)
+        add_menu_item(fileMenu, self.OnFileSave, wx.ID_SAVE)
+        add_menu_item(fileMenu, self.OnFileSaveAs, wx.ID_SAVEAS)
         fileMenu.AppendSeparator()
-        add_menu_item(fileMenu, self.OnLoadParams, require_open = True,
-                      text = '&Load parameters...\tCtrl+L')
-        add_menu_item(fileMenu, self.OnExportParams, require_open = True,
-                      text = '&Export parameters...\tCtrl+E')
+        add_menu_item(fileMenu, self.OnLoadParams,
+                      text = 'Load parameters\tCtrl+L')
+        add_menu_item(fileMenu, self.OnExportParams,
+                      text = 'Export parameters\tCtrl+E')
         fileMenu.AppendSeparator()
-        add_menu_item(fileMenu, self.OnQuit, wx.ID_EXIT)
+        add_menu_item(fileMenu, self.OnQuit, wx.ID_EXIT, require_open = False)
 
         editMenu = wx.Menu()
-        menuBar.Append(editMenu, 'Edit')
-        add_menu_item(editMenu, self.OnAutoAlign, require_open = True,
-                      text = '&Auto align...')
-        add_menu_item(editMenu, self.OnSplitMerge, require_open = True,
-                      text = '&Split/Merge/Reorder...')
-        add_menu_item(editMenu, self.OnProjResize, require_open = True,
-                      text = '&Project/Resize...')
-        add_menu_item(editMenu, self.OnBatchProcess, require_open = True,
-                      text = '&Batch process...')
+        menuBar.Append(editMenu, '&Edit')
+        add_menu_item(editMenu, self.OnAutoAlign, text = '&Auto align')
+        add_menu_item(editMenu, self.OnSplitMerge,
+                      text = '&Split/Merge/Reorder')
+        add_menu_item(editMenu, self.OnProjResize, text = '&Project/Resize')
+        add_menu_item(editMenu, self.OnBatchProcess, text = '&Batch process')
 
         viewMenu = wx.Menu()
-        menuBar.Append(viewMenu, 'View')
-        add_menu_item(viewMenu, self.OnViewControls, require_open = True,
-                      text = '&Show view controls\tCtrl+T')
+        menuBar.Append(viewMenu, '&View')
+        add_menu_item(viewMenu, self.OnViewControls, text = 'Show view controls\tCtrl+T')
 
         ## FIXME on a Mac, this menu will be empty because About MenuItems
         # gets automatically moved into the Application menu.  I guess we
         # should actually have some help entries here.
         helpMenu = wx.Menu()
         menuBar.Append(helpMenu, 'Help')
-        add_menu_item(helpMenu, self.OnAbout, wx.ID_ABOUT)
+        add_menu_item(helpMenu, self.OnAbout, wx.ID_ABOUT, require_open = False)
 
         self.SetMenuBar(menuBar)
         return MenuItems_that_require_open_file
+
+    def create_tool_bar(self):
+        """Creates toolbar and returns buttons that require an open file."""
+        toolbar = self.CreateToolBar(style=wx.TB_TEXT | wx.TB_NOICONS)
+        ToolBarTools_that_require_open_file = []
+
+        empty_bmp = wx.EmptyBitmap(0, 0)
+        def add_toolbar_tool(slot, label, id=wx.ID_ANY, require_open = True,
+                          *args, **kwargs):
+            ## AddLabelTool is deprecated on 3.0.3, we must use AddTool later
+            qtool = toolbar.AddLabelTool(id, label, empty_bmp, *args, **kwargs)
+            self.Bind(wx.EVT_TOOL, slot, qtool)
+            if require_open:
+                ToolBarTools_that_require_open_file.append(qtool)
+
+        add_toolbar_tool(self.OnAutoAlign, label = "Auto-Align")
+        add_toolbar_tool(self.OnLoadParams, label = 'Load params')
+        add_toolbar_tool(self.OnExportParams, label = 'Export params')
+        add_toolbar_tool(self.OnBatchProcess, label = 'Batch process')
+        add_toolbar_tool(self.OnSplitMerge, label = 'Split/Merge')
+        add_toolbar_tool(self.OnProjResize, label = 'Proj/Resize')
+        toolbar.Realize()
+        return ToolBarTools_that_require_open_file
 
 
     def requires_panel(foo):
@@ -138,6 +157,11 @@ class MainWindow(wx.Frame):
             self.statusbar.SetStatusText("")
         for m in self.MenuItems_that_require_open_file:
             m.Enable(enable)
+        ## Seems that using Enable() on the toolbar tools objects is not
+        # very reliable.  Setting from the toolbar seems to work better.
+        toolbar = self.GetToolBar()
+        for t in self.ToolBarTools_that_require_open_file:
+            toolbar.EnableTool(t.Id, enable)
 
     def OnNotebookPageClosed(self, event):
         self.on_notebook_change()
@@ -249,26 +273,40 @@ class MainWindow(wx.Frame):
 
     @requires_panel
     def OnAutoAlign(self, panel, event):
+        """Run a Simplex algorithm to attempt to automatically align each
+        wavelength with the first. This will take some time."""
         panel.autoAlign()
 
     @requires_panel
     def OnSplitMerge(self, panel, event):
+        """Split, Merge or Re-order data - merge not yet implemented."""
         dialogs.SplitMergeDialog(panel, panel.dataDoc)
 
     @requires_panel
     def OnProjResize(self, panel, event):
+        """When finished, will allow averaging of phases & angles of raw
+        SI data, and/or rescaling of the result. This should facilitate
+        merging and comparison of SI and wide-field data for a given
+        sample. Not yet implemented!"""
         dialogs.ProjResizeDialog(panel, panel.dataDoc)
 
     @requires_panel
     def OnLoadParams(self, panel, event):
+        """Load a previously-generated file describing how to crop and
+        align data."""
         panel.loadParameters()
 
     @requires_panel
     def OnExportParams(self, panel, event):
+        """Generate a file that contains the alignment and cropping
+        parameters for this file, so that they may be loaded later
+        (NB. alignment parameters saved in Microns)."""
         panel.exportParameters()
 
     @requires_panel
     def OnBatchProcess(self, panel, event):
+        """Apply these cropping and/or alignment parameters to a large
+        number of files."""
         dialogs.BatchDialog(self, panel)
 
     def OnAbout(self, event):
@@ -545,61 +583,6 @@ class ControlPanel(wx.Panel):
             rowSizer.Add(paramsPanel, 0, wx.LEFT | wx.BOTTOM, 5)
             sizer.Add(rowSizer, 0, wx.LEFT, 10)
 
-        # Row of buttons.
-        rowSizer = wx.BoxSizer(wx.HORIZONTAL)
-        autoAlignButton = wx.Button(panel, -1, "Auto-align")
-        self.prepHelpText(autoAlignButton, "Auto-align",
-                "Run a Simplex algorithm to attempt to automatically " +
-                "align each wavelength with the first. This will take " +
-                "some time."
-        )
-        autoAlignButton.Bind(wx.EVT_BUTTON, self.autoAlign)
-        rowSizer.Add(autoAlignButton, 0, wx.LEFT | wx.BOTTOM, 10)
-
-        exportButton = wx.Button(panel, -1, "Export param")
-        self.prepHelpText(exportButton, "Export parameters",
-                "Generate a file that contains the alignment and cropping " +
-                "parameters for this file, so that they may be loaded " +
-                "later (NB. alignment parameters saved in Microns)."
-        )
-        exportButton.Bind(wx.EVT_BUTTON, self.exportParameters)
-        rowSizer.Add(exportButton, 0, wx.LEFT | wx.BOTTOM, 10)
-
-        loadButton = wx.Button(panel, -1, "Load param")
-        self.prepHelpText(loadButton, "Load parameters",
-                "Load a previously-generated file describing how to crop " +
-                "and align data."
-        )
-        loadButton.Bind(wx.EVT_BUTTON, self.loadParameters)
-        rowSizer.Add(loadButton, 0, wx.LEFT | wx.BOTTOM, 10)
-
-        batchButton = wx.Button(panel, -1, "Batch process")
-        self.prepHelpText(batchButton, "Batch process",
-                "Apply these cropping and/or alignment parameters to " +
-                "a large number of files."
-        )
-        batchButton.Bind(wx.EVT_BUTTON, lambda event: dialogs.BatchDialog(
-                self.GetParent(), self))
-        rowSizer.Add(batchButton, 0, wx.LEFT | wx.BOTTOM, 10)
-        splitMergeButton = wx.Button(panel, -1, "Split/Merge")
-        self.prepHelpText(splitMergeButton, "Split/Merge data",
-                "Split, Merge or Re-order data - merge not yet implemented."
-        )
-        splitMergeButton.Bind(wx.EVT_BUTTON, lambda event: dialogs.SplitMergeDialog(
-                self, self.dataDoc))
-        rowSizer.Add(splitMergeButton, 0, wx.LEFT | wx.BOTTOM, 10)
-        projResizeButton = wx.Button(panel, -1, "Proj/Resize")
-        self.prepHelpText(projResizeButton, "Project/Resize data",
-                "When finished, will allow averaging of phases & angles of " +
-                "raw SI data, and/or rescaling of the result. This should " +
-                "facilitate merging and comparison of SI and wide-field " +
-                "data for a given sample. Not yet implemented!"
-        )
-        projResizeButton.Bind(wx.EVT_BUTTON, lambda event: dialogs.ProjResizeDialog(
-                self, self.dataDoc))
-        rowSizer.Add(projResizeButton, 0, wx.LEFT | wx.BOTTOM, 10)
-
-        sizer.Add(rowSizer)
         panel.SetSizerAndFit(sizer)
         return panel
 
