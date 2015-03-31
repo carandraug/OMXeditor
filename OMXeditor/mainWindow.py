@@ -344,7 +344,8 @@ class MainWindow(wx.Frame):
                           style = wx.OK | wx.ICON_ERROR)
             return
 
-        self.controlPanelsNotebook.AddPage(ControlPanel(self, doc_to_edit),
+        control_panel = ControlPanel(self.controlPanelsNotebook, doc_to_edit)
+        self.controlPanelsNotebook.AddPage(control_panel,
                                            os.path.basename(filename),
                                            select = True)
 
