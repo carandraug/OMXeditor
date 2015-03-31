@@ -367,7 +367,6 @@ class ControlPanel(wx.Panel):
     def __init__(self, parent, imageDoc, *args, **kwargs):
         wx.Panel.__init__(self, parent, *args, **kwargs)
 
-        self.shouldProject = False
         ## Contains all the information on the displayed image
         self.dataDoc = imageDoc
         # list of channel color tuples (default white before updating)
