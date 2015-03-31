@@ -492,6 +492,12 @@ class ControlPanel(wx.Panel):
 
         self.setParentSize()
 
+    ## Close our alignment progress window, if any.
+    def OnClose(self, event):
+        if self.alignProgressWindow:
+            self.alignProgressWindow.GetEventHandler().ProcessEvent(event)
+        event.Skip()
+
     ## Make the panel for cropping.
     def makeCropPanel(self):
         panel = wx.Panel(self)
@@ -676,13 +682,6 @@ class ControlPanel(wx.Panel):
     def setAlignReference(self, index):
         for i, panel in enumerate(self.alignParamsPanels):
             panel.setReferenceControl(i == index)
-
-
-    ## Close our alignment progress window, if any.
-    def OnClose(self, event = None):
-        if self.alignProgressWindow is not None:
-            self.alignProgressWindow.Destroy()
-            self.alignProgressWindow = None
 
 
     ## Get the current view index for the given axis.
