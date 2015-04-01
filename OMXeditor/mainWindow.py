@@ -815,112 +815,10 @@ class ControlPanel(wx.Panel):
             if panel.shouldUseAsReference():
                 return i
 
-
-    ## Retrieve the 3D array for the specified wavelength, in addition to
-    # our reference wavelength, and pass them back to the worker.
-    @util.callInMainThread
-    def getFullVolume(self, wavelength, worker):
-        reference = self.getReferenceWavelength()
-        result = self.dataDoc.alignAndCrop(
-                wavelengths = [reference, wavelength],
-                timepoints = [self.dataDoc.curViewIndex[1]])
-        # Take the first timepoint.
-        worker.setVolumes(result[0][0], result[1][0])
-
-
-    ## Update the status text to show the user how auto-alignment is going.
-    @util.callInMainThread
-    def updateAutoAlign(self, startingCost, currentCost, wavelength):
-        self.alignProgressWindow.newData(wavelength, currentCost)
-
-
-    ## Receive notification from one of the aligner threads that it's now
-    # working on Z alignment.
-    def alignSwitchTo3D(self, wavelength):
-        self.alignProgressWindow.switchTo3D(wavelength)
-
-
-    ## Receive notification from one of the aligner threads that it's all
-    # done.
-    @util.callInMainThread
-    def finishAutoAligning(self, result, wavelength):
-        self.alignedWavelengths[wavelength] = True
-        # Check if we've done with alignment for all wavelengths
-        amDone = True
-        for i, done in self.alignedWavelengths.iteritems():
-            if not done:
-                amDone = False
-                break
-        if amDone:
-            self.alignProgressWindow.finish()
-        print "Got transformation",result,"for channel",wavelength
-        self.alignParamsPanels[wavelength].setParams(result)
-        self.setAlignParams(wavelength)
-
-
     ## The align progress frame has been destroyed, so we don't need to
     # track it any more.
     def clearProgressFrame(self):
         self.alignProgressWindow = None
-
-
-    ## Calculate the centers of the beads and find out how well we have
-    # aligned the different wavelengths.
-    def checkAlignment(self):
-        volumes = self.dataDoc.alignAndCrop(
-                timepoints = [self.dataDoc.curViewIndex[1]]
-        )
-        beadCentersByWavelength = []
-        for wavelength in xrange(self.dataDoc.numWavelengths):
-            print "Processing channel",wavelength
-            data = volumes[wavelength][0]
-            # Normalize
-            data = (data - data.min()) / (data.max() - data.min())
-            # Remove a border around the edge to make our lives easier.
-            data[:5,:5,:5] = 0
-            data[-5:,-5:,-5:] = 0
-            smoothed = scipy.ndimage.filters.gaussian_filter(data, 3)
-            beadCenters = []
-            c = 0
-            # Arbitrarily ignore any beads that aren't at least half as bright
-            # as the brightest bead.
-            while numpy.max(data) > .5:
-                # Find max in data, mark as bead, zero it and neighbors out.
-                target = numpy.where(data == numpy.max(data))
-                # May get multiple results; pick the first.
-                target = numpy.array(target).T[0]
-                beadCenters.append(target)
-                # Zero out pixels near target.
-                data[target[0] - 5:target[0] + 5,
-                     target[1] - 5:target[1] + 5,
-                     target[2] - 5:target[2] + 5] = 0
-                c += 1
-            print "Found",len(beadCenters),"beads"
-            beadCentersByWavelength.append(beadCenters)
-
-        distances = []
-        zDistances = []
-        offsets = []
-        for center in beadCentersByWavelength[0]:
-            # Find the closest bead in the next wavelength.
-            bestDist = None
-            bestAlt = None
-            for alt in beadCentersByWavelength[1]:
-                distance = numpy.linalg.norm(center - alt)
-                if bestDist is None or distance < bestDist:
-                    bestDist = distance
-                    bestAlt = alt
-            print "For center",center,"got best",bestDist,"from",bestAlt
-            if bestDist < 10:
-                distances.append(numpy.linalg.norm(center[1:] - bestAlt[1:]))
-                zDistances.append(center[0] - bestAlt[0])
-                offsets.append(center - bestAlt)
-        offset = numpy.median(numpy.array(offsets), axis = 0)
-        print "Median XY offset in pixels is",offset
-        offset = numpy.array([offset[1], offset[0], 0])
-        print "In microns it's",self.dataDoc.convertToMicrons(offset)
-        print "Median Z is",numpy.median(numpy.array(zDistances))
-        print "Average offset in pixels is",numpy.mean(numpy.array(offsets), axis = 0)
 
 
     ## Prompt the user for a location to save alignment and cropping
@@ -934,7 +832,6 @@ class ControlPanel(wx.Panel):
         if dialog.ShowModal() != wx.ID_OK:
             return
         editor.saveAlignParameters(self.dataDoc, dialog.GetPath())
-
 
     ## Load a parameters file as generated by OnExportParameters
     def loadParameters(self, event = None):
