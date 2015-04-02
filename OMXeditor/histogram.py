@@ -3,12 +3,14 @@ import OpenGL.GL as GL
 import wx
 import wx.glcanvas
 
-## Drag modes -- left vs. right braces.
-(DRAG_BLACKPOINT, DRAG_WHITEPOINT) = range(2)
-
 ## An OpenGL canvas for drawing histograms, including mouse manipulation of the
 # black and whitepoints.
 class HistogramCanvas(wx.glcanvas.GLCanvas):
+
+    ## Drag modes -- left vs. right braces.
+    DRAG_BLACKPOINT = 1
+    DRAG_WHITEPOINT = 2
+
     ## \param scaleCallback Function to call when black/whitepoints are changed.
     # \param infoCallback Function to call to inform about current position and
     #        scale.
@@ -144,15 +146,15 @@ class HistogramCanvas(wx.glcanvas.GLCanvas):
             # Started dragging. Set drag mode based on current mouse position.
             self.dragMode = None
             if curX < self.width / 2:
-                self.dragMode = DRAG_BLACKPOINT
+                self.dragMode = self.DRAG_BLACKPOINT
             else:
-                self.dragMode = DRAG_WHITEPOINT
+                self.dragMode = self.DRAG_WHITEPOINT
         elif event.LeftIsDown():
             # Continue dragging.
             delta = float(curX - self.mouseX) / self.width
-            if self.dragMode == DRAG_BLACKPOINT:
+            if self.dragMode == self.DRAG_BLACKPOINT:
                 self.blackPoint += delta
-            elif self.dragMode == DRAG_WHITEPOINT:
+            elif self.dragMode == self.DRAG_WHITEPOINT:
                 self.whitePoint += delta
             shouldUpdate = True
         elif event.RightDown():
