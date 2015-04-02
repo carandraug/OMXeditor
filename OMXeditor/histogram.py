@@ -105,14 +105,14 @@ class HistogramCanvas(wx.glcanvas.GLCanvas):
         GL.glColor3f(0, 0, 0)
         binWidth = self.width / float(self.numBins)
         maxVal = max(self.binSizes)
-        for i, size in enumerate(self.binSizes):
-            if size:
-                xOff = i * binWidth
-                height = size / float(maxVal) * self.height
-                GL.glVertex2f(xOff, 0)
-                GL.glVertex2f(xOff + binWidth, 0)
-                GL.glVertex2f(xOff + binWidth, height)
-                GL.glVertex2f(xOff, height)
+
+        xOff = binWidth * numpy.array (range(self.binSizes.size +1))
+        heights = self.binSizes / float(maxVal) * self.height
+        for i in self.binSizes.nonzero()[0]:
+            GL.glVertex2f(xOff[i], 0)
+            GL.glVertex2f(xOff[i+1], 0)
+            GL.glVertex2f(xOff[i+1], heights[i])
+            GL.glVertex2f(xOff[i], heights[i])
         GL.glEnd()
 
         # Draw marks for the black and white points
