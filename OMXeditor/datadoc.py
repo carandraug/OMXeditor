@@ -683,3 +683,13 @@ class DataDoc:
         for i in range(self.imageHeader.NumTitles):
             titles.append(self.imageHeader.title[i])
         return titles
+
+    def is_multichannel(self):
+        """True if has multiple wavelengths."""
+        return self.size[0] > 1
+    def is_timeseries(self):
+        """True if has multiple time points."""
+        return self.size[1] > 1
+    def is_volume(self):
+        """True if has multiple z slices."""
+        return self.size[2] > 1
