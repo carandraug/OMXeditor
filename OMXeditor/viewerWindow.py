@@ -5,11 +5,13 @@ import wx.glcanvas
 
 import datadoc
 
-## The ViewControlWindow class provides a window that allows the user
-# to control and customize various views of the data -- by setting the
-# 4D crosshairs, toggling visibility of a specific perspective, and creating
-# projections across orthogonal axes.
 class ViewControlWindow(wx.Frame):
+    """The ViewControlWindow class provides a window that allows the user
+    to control and customize various views of the data -- by setting the
+    4D crosshairs, toggling visibility of a specific perspective, and creating
+    projections across orthogonal axes.
+    """
+
     def __init__(self, parent, dataDoc, *args, **kwargs):
         wx.Frame.__init__(self, parent, *args, **kwargs)
         ## We call a few functions on our parent as a way to communicate with
@@ -58,10 +60,11 @@ class ViewControlWindow(wx.Frame):
         self.SetSizerAndFit(sizer)
 
 
-    ## Create a panel that provides view options for a single viewer: whether
-    # or not the viewer is visible, and which, if any, axis to project the
-    # viewer across.
     def makeViewerPanel(self, axes, isVisibleByDefault):
+        """Create a panel that provides view options for a single viewer:
+        whether or not the viewer is visible, and which, if any, axis to
+        project the viewer across.
+        """
         panel = wx.Panel(self, -1, style = wx.BORDER_SUNKEN | wx.TAB_TRAVERSAL)
         sizer = wx.BoxSizer(wx.VERTICAL)
 
@@ -103,10 +106,11 @@ class ViewControlWindow(wx.Frame):
         return panel
 
 
-    ## Make a slider that allows the user to change the view coordinates for
-    # one axis of the image. Insert the slider, and its label, into the
-    # provided sizer.
     def makeSliderControl(self, sizer, axis):
+        """Make a slider that allows the user to change the view coordinates
+        for one axis of the image. Insert the slider, and its label, into the
+        provided sizer.
+        """
         sizer.Add(wx.StaticText(self, -1,
             "%s:" % datadoc.DIMENSION_LABELS[axis]),
                 0, wx.ALL, 5)
@@ -121,13 +125,14 @@ class ViewControlWindow(wx.Frame):
         return slider
 
 
-    ## Recognize that alignment parameters have changed. If there is rotation
-    # or scaling, then projections through X or Y require transforming the
-    # entire volume, and projections through time require transforming
-    # the entire dataset -- ouch! If this happens, we want to notify the
-    # user before they click on anything, so we adjust background colors
-    # and tooltips to suit.
     def onAlignChange(self, alignParams):
+        """Recognize that alignment parameters have changed. If there is
+        rotation or scaling, then projections through X or Y require
+        transforming the entire volume, and projections through time require
+        transforming the entire dataset -- ouch! If this happens, we want
+        to notify the user before they click on anything, so we adjust
+        background colors and tooltips to suit.
+        """
         isExpensive = (numpy.any(alignParams[:,3] != 0) or
                 numpy.any(alignParams[:,4] != 1))
         preamble = "Due to the rotation and scaling alignment parameters, " + \
@@ -147,13 +152,17 @@ class ViewControlWindow(wx.Frame):
                     radio.SetBackgroundColour([230] * 3)
                     radio.SetToolTipString('')
 
-
-    ## Update our sliders because the user changed the view without using them.
-    # \param newPositions Maps axes to positions on those axes.
     def setSliders(self, newPositions):
+        """Update our sliders because the user changed the view without
+        using them.
+
+        Args:
+            newPositions - Maps axes to positions on those axes.
+        """
         for axis, slider in self.axisToSliderMap.iteritems():
             if axis in newPositions:
                 slider.SetValue(newPositions[axis])
+
 
 class ViewerWindow(wx.Frame):
     """Simple window that contains a GLViewer instance.
@@ -193,8 +202,8 @@ class ViewerWindow(wx.Frame):
         self.Bind(wx.EVT_SIZE, self.onSize)
 
 
-    ## Resize our canvas to fill the window, adjusting zoom factors to suit.
     def onSize(self, event):
+        "Resize our canvas to fill the window, adjusting zoom factors to suit."""
         size = list(self.GetSize())
         size[1] -= ViewerWindow.VERTICAL_PADDING
         self.viewer.setSize(size, self.dataSize)
@@ -202,18 +211,22 @@ class ViewerWindow(wx.Frame):
 
 
 
-## This class handles displaying multi-channel 2D images. It includes a
-# crop box and a crosshairs, both of which can be manipulated by the mouse.
-# Most of the actual drawing logic is handled in the Image class.
 class GLViewer(wx.glcanvas.GLCanvas):
-    ## Instantiate.
-    # \param axes: tuple that labels which of the dimensions this viewer shows.
-    #        The ordering is WTZYX (that is, if our tuple is e.g. (4, 2) then
-    #        we're showing an XZ slice), so this can be used as an index into
-    #        things in the DataDoc.
+    """This class handles displaying multi-channel 2D images.
+
+    It includes a crop box and a crosshairs, both of which can be manipulated
+    by the mouse. Most of the actual drawing logic is handled in the Image
+    class.
+    """
     def __init__(self, parent, axes = (1, 2), dataDoc = None,
-                 viewManager = None,
-                 style = 0, size = wx.DefaultSize):
+                 viewManager = None, style = 0, size = wx.DefaultSize):
+        """
+        Args:
+            axes: tuple that labels which of the dimensions this viewer shows.
+                The ordering is WTZYX (that is, if our tuple is e.g. (4, 2)
+                then we're showing an XZ slice), so this can be used as an
+                index into things in the DataDoc.
+        """
         wx.glcanvas.GLCanvas.__init__(self, parent, style = style, size = size)
 
         ## DataDoc instance holding the data we show.
@@ -283,18 +296,16 @@ class GLViewer(wx.glcanvas.GLCanvas):
 
 
     def addImgL(self, imgL, smin=0, smax=0, refreshNow=1):
-        '''
-        append images from a list of them
-        '''
+        """Append images from a list of them"""
         for i, img in enumerate(imgL):
             self.addImg(i, img, smin, smax)
         if refreshNow:
             self.Refresh(0)
 
-
-    ## Update image data, or create a new Image instance if we don't have one
-    # in the indicated slot already.
     def addImg(self, index, img, smin=0, smax=10000):
+        """Update image data, or create a new Image instance if we
+        don't have one in the indicated slot already.
+        """
         pic_ny, pic_nx = img.shape
 
         self.pic_ny, self.pic_nx = pic_ny,pic_nx
@@ -618,28 +629,23 @@ class GLViewer(wx.glcanvas.GLCanvas):
         ev.Skip()
 
 
-    ## Return true if we're in the middle of dragging something around.
     def getIsMouseBusy(self):
+        """Return true if we're in the middle of dragging something around."""
         return self.isMouseDragging and not self.isCurrentCursorDefault
-
 
     def OnReload(self, event=None):
         self.Refresh(False)
 
-
-    ## Update the size of the canvas by scaling it.
     def setSize(self, size, dataSize):
+        """Update the size of the canvas by scaling it."""
         self.scaleX = size[0] / float(dataSize[0])
         self.scaleY = size[1] / float(dataSize[1])
         self.w, self.h = size
         self.Refresh(0)
 
-
-    ## Pass keyboard events through to the controller.
     def OnKey(self, event):
+        """Pass keyboard events through to the controller."""
         self.viewManager.onKey(event.GetKeyCode())
-
-
 
 
 class Image:
@@ -795,13 +801,12 @@ class Image:
         GL.glPopMatrix()
 
 
-    ## Free the allocated GL texture
     def wipe(self):
+        """Free the allocated GL texture."""
         GL.glDeleteTextures(self.textureID)
 
-
-    ## Accept a new array of image data.
     def updateImage(self, imageData, imageMin, imageMax):
+        """Accept a new array of image data."""
         self.imageData = imageData
         self.imageMin = imageMin
         self.imageMax = imageMax
@@ -810,11 +815,9 @@ class Image:
         self.bindTexture()
         self.refresh()
 
-
     def setMinMax(self, imageMin, imageMax):
         self.imageMin = imageMin
         self.imageMax = imageMax
-
 
     def setTransform(self, dx, dy, angle, zoom):
         self.dx = dx
@@ -822,10 +825,8 @@ class Image:
         self.angle = angle
         self.zoom = zoom
 
-
     def setColor(self, color):
         self.color = color
-
 
     def toggleVisibility(self):
         self.isVisible = not self.isVisible
