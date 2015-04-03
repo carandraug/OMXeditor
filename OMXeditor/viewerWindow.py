@@ -9,23 +9,23 @@ import datadoc
 VERTICAL_PADDING = 16
 
 ## Minimum size in pixels of a viewer in any dimension.
-# This would be smaller, but apparently WX windows aren't allowed to be 
+# This would be smaller, but apparently WX windows aren't allowed to be
 # shorter than this.
 MIN_VIEWER_SIZE = 150 - VERTICAL_PADDING
 
-## Maximum initial size in pixels of a viewer in any dimension, to keep 
+## Maximum initial size in pixels of a viewer in any dimension, to keep
 # windows from going off the edge of the monitor for large datasets.
 MAX_VIEWER_SIZE = 600
 
 ## Simple window that contains a GLViewer instance.
 class ViewerWindow(wx.Frame):
     def __init__(self, parent, axes, **kwargs):
-        title = "%s-%s view" % (datadoc.DIMENSION_LABELS[axes[0]], 
+        title = "%s-%s view" % (datadoc.DIMENSION_LABELS[axes[0]],
                 datadoc.DIMENSION_LABELS[axes[1]])
-        wx.Frame.__init__(self, parent, title = title, 
+        wx.Frame.__init__(self, parent, title = title,
                 style = wx.RESIZE_BORDER | wx.CAPTION)
 
-        self.viewer = GLViewer(self, viewManager = parent, 
+        self.viewer = GLViewer(self, viewManager = parent,
                 axes = axes, **kwargs)
         self.dataSize = self.viewer.dataDoc.getSliceSize(*axes)
 
@@ -49,14 +49,14 @@ class ViewerWindow(wx.Frame):
 
 
 
-## This class handles displaying multi-channel 2D images. It includes a 
-# crop box and a crosshairs, both of which can be manipulated by the mouse. 
+## This class handles displaying multi-channel 2D images. It includes a
+# crop box and a crosshairs, both of which can be manipulated by the mouse.
 # Most of the actual drawing logic is handled in the Image class.
 class GLViewer(wx.glcanvas.GLCanvas):
     ## Instantiate.
     # \param axes: tuple that labels which of the dimensions this viewer shows.
     #        The ordering is WTZYX (that is, if our tuple is e.g. (4, 2) then
-    #        we're showing an XZ slice), so this can be used as an index into 
+    #        we're showing an XZ slice), so this can be used as an index into
     #        things in the DataDoc.
     def __init__(self, parent, axes = (1, 2), dataDoc = None,
                  viewManager = None,
@@ -79,7 +79,7 @@ class GLViewer(wx.glcanvas.GLCanvas):
         ## Cursor to default to when not displaying any special cursor.
         self.defaultCursor = self.GetCursor()
 
-        ## Dimensions we are displaying; corresponds to dimensions in 
+        ## Dimensions we are displaying; corresponds to dimensions in
         # the dataDoc instance (T/W/Z/Y/X).
         self.axes = axes
 
@@ -92,20 +92,20 @@ class GLViewer(wx.glcanvas.GLCanvas):
 
         ## Position of the mouse in the previous update cycle.
         self.mousePrevPos = []
-        
+
         ## If true, then dragging is modifying the slice lines.
         self.amDraggingSlicelines = False
-        
+
         ## Indices of sliceline dimension(s) being dragged.
         self.dragIndices = []
-        
+
         ## If true, then dragging is modifying the cropbox.
         self.amDraggingCropbox = False
-        
-        ## Whether a given dimension's cropbox is having its min or max 
+
+        ## Whether a given dimension's cropbox is having its min or max
         # modified.
         self.cropMinMax = []
-        
+
         ## Whether or not the current cursor is our default cursor. Sadly wx
         # doesn't allow you to compare cursors in any meaningful way.
         self.isCurrentCursorDefault = True
@@ -119,8 +119,8 @@ class GLViewer(wx.glcanvas.GLCanvas):
         wx.EVT_PAINT(self, self.OnPaint)
         wx.EVT_MOUSE_EVENTS(self, self.OnMouse)
         self.Bind(wx.EVT_KEY_DOWN, self.OnKey)
-    
-        
+
+
     def InitGL(self):
         self.w, self.h = self.GetClientSizeTuple()
         self.SetCurrent(self.context)
@@ -180,7 +180,7 @@ class GLViewer(wx.glcanvas.GLCanvas):
         self.imgList[imgidx].toggleVisibility()
         if RefreshNow:
             self.Refresh(0)
-        
+
     def OnPaint(self, event):
         try:
             dc = wx.PaintDC(self)
@@ -189,7 +189,7 @@ class GLViewer(wx.glcanvas.GLCanvas):
 
         if not self.haveInitedGL:
             self.InitGL()
-            
+
         self.SetCurrent(self.context)
 
         GL.glViewport(0, 0, self.w, self.h)
@@ -207,9 +207,9 @@ class GLViewer(wx.glcanvas.GLCanvas):
         self.imagesToRefresh = set()
 
         GL.glScalef(self.scaleX, self.scaleY, 1)
-            
+
         if self.viewManager.getIsViewCropped():
-            # Set up some clipping planes based on the relevant portion 
+            # Set up some clipping planes based on the relevant portion
             # of the cropbox.
             lx = self.dataDoc.cropMin[self.axes[0]]
             ux = self.dataDoc.cropMax[self.axes[0]]
@@ -220,7 +220,7 @@ class GLViewer(wx.glcanvas.GLCanvas):
             plane1 = [0.0, -1.0, 0.0, uy]
             plane2 = [1.0, 0.0, 0.0, -lx]
             plane3 = [-1.0, 0.0, 0.0, ux]
-            
+
             GL.glClipPlane(GL.GL_CLIP_PLANE0, plane0)
             GL.glEnable(GL.GL_CLIP_PLANE0)
             GL.glClipPlane(GL.GL_CLIP_PLANE1, plane1)
@@ -320,33 +320,33 @@ class GLViewer(wx.glcanvas.GLCanvas):
         if not self.isMouseDragging:
             # Check if we're close to a sliceline or the cropbox, and set
             # the cursor and some internal state appropriately.
-            # The first tuple is the required position of the mouse to 
-            # trigger the cursor change. The second tuple has the cursor to 
+            # The first tuple is the required position of the mouse to
+            # trigger the cursor change. The second tuple has the cursor to
             # change to, the type of modification to perform (either moving
             # the slicelines or cropbox), and the third describes how dragging
             # the mouse will affect values.
             locCursorActions = [
                     # Both slice lines.
-                    ((sliceHoriz, sliceVert), 
+                    ((sliceHoriz, sliceVert),
                         (wx.CURSOR_SIZING, 'slice', list(self.axes))),
                     # Horizontal slice line; None indicates we should ignore
                     # motion in the X direction.
-                    ((None, sliceVert), 
+                    ((None, sliceVert),
                         (wx.CURSOR_SIZENS, 'slice', [None, self.axes[1]])),
                     # Vertical slice line
-                    ((sliceHoriz, None), 
+                    ((sliceHoriz, None),
                         (wx.CURSOR_SIZEWE, 'slice', [self.axes[0], None])),
                     # Upper-left corner
-                    ((cropMin[0], cropMax[1]), 
+                    ((cropMin[0], cropMax[1]),
                         (wx.CURSOR_SIZENWSE, 'crop', ('min', 'max'))),
                     # Upper-right corner
-                    ((cropMax[0], cropMax[1]), 
+                    ((cropMax[0], cropMax[1]),
                         (wx.CURSOR_SIZENESW, 'crop', ('max', 'max'))),
                     # Lower-left corner
-                    ((cropMin[0], cropMin[1]), 
+                    ((cropMin[0], cropMin[1]),
                         (wx.CURSOR_SIZENESW, 'crop', ('min', 'min'))),
                     # Lower-right corner
-                    ((cropMax[0], cropMin[1]), 
+                    ((cropMax[0], cropMin[1]),
                         (wx.CURSOR_SIZENWSE, 'crop', ('max', 'min'))),
                     # Upper edge
                     ((None, cropMax[1]),
@@ -407,8 +407,8 @@ class GLViewer(wx.glcanvas.GLCanvas):
             self.mousePrevPos = [xeff, yeff]
             self.Refresh()
 
-        # For some reason, setting the statusbar text when we're dragging 
-        # stuff around causes horrible flickering effects. 
+        # For some reason, setting the statusbar text when we're dragging
+        # stuff around causes horrible flickering effects.
         if not self.isMouseDragging:
             pic_nx, pic_ny = self.imgList[0].imageData.shape
             # Generate the TZYX coordinate we want info on.
@@ -425,7 +425,7 @@ class GLViewer(wx.glcanvas.GLCanvas):
                 text += "%s: at %s; %.2f" % (axisLabel, locLabel, values[wavelength])
                 wx.GetApp().setStatusbarText(text, wavelength)
 
-    
+
     def doLDown(self, xeff, yeff):
         if not self.isCurrentCursorDefault:
             # Mouse is over something the user can manipulate.
@@ -440,7 +440,7 @@ class GLViewer(wx.glcanvas.GLCanvas):
     def OnMouse(self, ev):
         if ev.Entering():
             self.SetFocus()
-        
+
         x, y = ev.GetPosition()
         y = self.h - y
         xEff, yEff = int(x / self.scaleX), int(y / self.scaleY)
@@ -448,7 +448,7 @@ class GLViewer(wx.glcanvas.GLCanvas):
         midButt = ev.MiddleDown() or (ev.LeftDown() and ev.AltDown())
         midIsButt = ev.MiddleIsDown() or (ev.LeftIsDown() and ev.AltDown())
         rightButt = ev.RightDown() or (ev.LeftDown() and ev.ControlDown())
-        
+
         if ev.Leaving():
             # Mouse is leaving the canvas, so stop what we're doing.
             wx.GetApp().setStatusbarText('')
@@ -504,7 +504,7 @@ dtypeToGlTypeMap = {
 dtypeToMaxValMap = {
     numpy.uint16: (1 << 16) - 1,
     numpy.int16: (1 << 15) - 1,
-    numpy.uint8: (1 << 8) - 1, 
+    numpy.uint8: (1 << 8) - 1,
     numpy.bool_: (1 << 8) - 1,
     numpy.float32: 1
 }
@@ -522,7 +522,7 @@ class Image:
         self.zoom = 1
         self.color = (1, 1, 1)
         self.isVisible = True
-        
+
         self.bindTexture()
         self.refresh()
 
@@ -565,11 +565,11 @@ class Image:
         minMaxRange = float(self.imageMax - self.imageMin)
         if abs(self.imageMax - self.imageMin) < 1:
             minMaxRange = 1
-        
+
         imgType = self.imageData.dtype.type
         fBias = -self.imageMin / minMaxRange
         f = dtypeToMaxValMap[imgType] / minMaxRange
-        
+
         GL.glBindTexture(GL.GL_TEXTURE_2D, self.textureID)
 
         GL.glPixelTransferf(GL.GL_RED_SCALE,   f)
@@ -585,7 +585,7 @@ class Image:
         GL.glPixelStorei(GL.GL_UNPACK_SWAP_BYTES,
                 not self.imageData.dtype.isnative)
         GL.glPixelStorei(GL.GL_UNPACK_ALIGNMENT, self.imageData.itemsize)
-        
+
         imgString = self.imageData.tostring()
 
         pic_ny, pic_nx = self.imageData.shape
@@ -612,23 +612,23 @@ class Image:
         GL.glTranslated(-cx, -cy, 0)
 
         GL.glColor3fv(self.color)
-        
+
         GL.glBindTexture(GL.GL_TEXTURE_2D, self.textureID)
 
         GL.glBegin(GL.GL_QUADS)
-       
+
         pic_ny, pic_nx = self.imageData.shape
 
         ###//(0,0) at left bottom
         GL.glTexCoord2f(0, 0)
         GL.glVertex2i(0, 0)
-            
+
         GL.glTexCoord2f(self.picTexRatio_x, 0)
         GL.glVertex2i(pic_nx, 0)
-            
+
         GL.glTexCoord2f(self.picTexRatio_x, self.picTexRatio_y)
         GL.glVertex2i(pic_nx, pic_ny)
-            
+
         GL.glTexCoord2f(0, self.picTexRatio_y)
         GL.glVertex2i(0, pic_ny)
 
@@ -639,7 +639,7 @@ class Image:
     ## Free the allocated GL texture
     def wipe(self):
         GL.glDeleteTextures(self.textureID)
-   
+
 
     ## Accept a new array of image data.
     def updateImage(self, imageData, imageMin, imageMax):
