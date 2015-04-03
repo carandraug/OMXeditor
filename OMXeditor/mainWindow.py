@@ -13,7 +13,6 @@ import __init__
 import datadoc
 import editor
 import viewerWindow
-import viewControlWindow
 import dialogs
 import histogram
 import align
@@ -454,7 +453,7 @@ class ControlPanel(wx.Panel):
 
         ## Allows user to customize the views they see, e.g. add kymographs,
         # or take projections of views.
-        self.viewControlWindow = viewControlWindow.ViewControlWindow(self,
+        self.viewControlWindow = viewerWindow.ViewControlWindow(self,
                 self.dataDoc,
                 title = 'View Controls',
                 style = wx.RESIZE_BORDER | wx.CAPTION)
