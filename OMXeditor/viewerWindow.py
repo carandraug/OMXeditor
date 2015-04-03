@@ -5,20 +5,22 @@ import wx.glcanvas
 
 import datadoc
 
-## Vertical adjustment for the size of the menubar
-VERTICAL_PADDING = 16
-
-## Minimum size in pixels of a viewer in any dimension.
-# This would be smaller, but apparently WX windows aren't allowed to be
-# shorter than this.
-MIN_VIEWER_SIZE = 150 - VERTICAL_PADDING
-
-## Maximum initial size in pixels of a viewer in any dimension, to keep
-# windows from going off the edge of the monitor for large datasets.
-MAX_VIEWER_SIZE = 600
-
-## Simple window that contains a GLViewer instance.
 class ViewerWindow(wx.Frame):
+    """Simple window that contains a GLViewer instance.
+
+    Class constants:
+        VERTICAL_PADDING - Vertical adjustment for the size of the menubar.
+        MIN_VIEWER_SIZE - Minimum size in pixels of a viewer in any dimension.
+            This would be smaller, but apparently WX windows aren't allowed
+            to be shorter than this.
+        MAX_VIEWER_SIZE -  Maximum initial size in pixels of a viewer in any
+            dimension, to keep windows from going off the edge of the monitor
+            for large datasets.
+    """
+    VERTICAL_PADDING = 16
+    MIN_VIEWER_SIZE  = 150 - VERTICAL_PADDING
+    MAX_VIEWER_SIZE  = 600
+
     def __init__(self, parent, axes, **kwargs):
         title = "%s-%s view" % (datadoc.DIMENSION_LABELS[axes[0]],
                 datadoc.DIMENSION_LABELS[axes[1]])
@@ -32,8 +34,9 @@ class ViewerWindow(wx.Frame):
         # Enforce a minimum size in each dimension.
         targetSize = list(self.dataSize)
         for i, val in enumerate(self.dataSize):
-            targetSize[i] = min(MAX_VIEWER_SIZE, max(MIN_VIEWER_SIZE, val))
-        targetSize[1] += VERTICAL_PADDING
+            targetSize[i] = min(ViewerWindow.MAX_VIEWER_SIZE,
+                                max(ViewerWindow.MIN_VIEWER_SIZE, val))
+        targetSize[1] += ViewerWindow.VERTICAL_PADDING
 
         self.SetSize(targetSize)
 
@@ -43,7 +46,7 @@ class ViewerWindow(wx.Frame):
     ## Resize our canvas to fill the window, adjusting zoom factors to suit.
     def onSize(self, event):
         size = list(self.GetSize())
-        size[1] -= VERTICAL_PADDING
+        size[1] -= ViewerWindow.VERTICAL_PADDING
         self.viewer.setSize(size, self.dataSize)
         event.Skip()
 
@@ -487,31 +490,37 @@ class GLViewer(wx.glcanvas.GLCanvas):
         self.viewManager.onKey(event.GetKeyCode())
 
 
-## Maps numpy datatypes to OpenGL datatypes
-dtypeToGlTypeMap = {
-    numpy.uint8: GL.GL_UNSIGNED_BYTE,
-    numpy.uint16: GL.GL_UNSIGNED_SHORT,
-    numpy.int16: GL.GL_SHORT,
-    numpy.float32: GL.GL_FLOAT,
-    numpy.float64: GL.GL_FLOAT,
-    numpy.int32: GL.GL_FLOAT,
-    numpy.uint32: GL.GL_FLOAT,
-    numpy.complex64: GL.GL_FLOAT,
-    numpy.complex128: GL.GL_FLOAT,
-}
-
-## Maps numpy datatypes to the maximum value the datatype can represent
-dtypeToMaxValMap = {
-    numpy.uint16: (1 << 16) - 1,
-    numpy.int16: (1 << 15) - 1,
-    numpy.uint8: (1 << 8) - 1,
-    numpy.bool_: (1 << 8) - 1,
-    numpy.float32: 1
-}
 
 
-## This class handles display of a single 2D array of pixel data.
 class Image:
+    """This class handles display of a single 2D array of pixel data.
+
+    Class constants:
+        NUMPY_2_GL_TYPE_MAP - Maps numpy datatypes to OpenGL datatypes.
+        NUMPY_TYPE_2_MAX_MAP - Maps numpy datatypes to the maximum value
+            the datatype can represent
+    """
+
+    NUMPY_2_GL_TYPE_MAP = {
+        numpy.uint8       : GL.GL_UNSIGNED_BYTE,
+        numpy.uint16      : GL.GL_UNSIGNED_SHORT,
+        numpy.int16       : GL.GL_SHORT,
+        numpy.float32     : GL.GL_FLOAT,
+        numpy.float64     : GL.GL_FLOAT,
+        numpy.int32       : GL.GL_FLOAT,
+        numpy.uint32      : GL.GL_FLOAT,
+        numpy.complex64   : GL.GL_FLOAT,
+        numpy.complex128  : GL.GL_FLOAT,
+    }
+
+    NUMPY_TYPE_2_MAX_MAP = {
+        numpy.uint16  : (1 << 16) - 1,
+        numpy.int16   : (1 << 15) - 1,
+        numpy.uint8   : (1 << 8) - 1,
+        numpy.bool_   : (1 << 8) - 1,
+        numpy.float32 : 1
+    }
+
     def __init__(self, imageData, imageMin, imageMax):
         self.imageData = imageData
         self.imageMin = imageMin
@@ -554,11 +563,11 @@ class Image:
                 GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST)
 
         imgType = self.imageData.dtype.type
-        if imgType not in dtypeToGlTypeMap:
+        if imgType not in Image.NUMPY_2_GL_TYPE_MAP:
             raise ValueError, "Unsupported data mode %s" % str(imgType)
         GL.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_RGB,
                       tex_nx,tex_ny, 0, GL.GL_LUMINANCE,
-                      dtypeToGlTypeMap[imgType], None)
+                      Image.NUMPY_2_GL_TYPE_MAP[imgType], None)
 
 
     def refresh(self):
@@ -568,7 +577,7 @@ class Image:
 
         imgType = self.imageData.dtype.type
         fBias = -self.imageMin / minMaxRange
-        f = dtypeToMaxValMap[imgType] / minMaxRange
+        f = Image.NUMPY_TYPE_2_MAX_MAP[imgType] / minMaxRange
 
         GL.glBindTexture(GL.GL_TEXTURE_2D, self.textureID)
 
@@ -590,10 +599,10 @@ class Image:
 
         pic_ny, pic_nx = self.imageData.shape
 
-        if imgType not in dtypeToGlTypeMap:
+        if imgType not in Image.NUMPY_2_GL_TYPE_MAP:
             raise ValueError, "Unsupported data mode %s" % str(imgType)
         GL.glTexSubImage2D(GL.GL_TEXTURE_2D, 0, 0, 0, pic_nx, pic_ny,
-                GL.GL_LUMINANCE, dtypeToGlTypeMap[imgType], imgString)
+                GL.GL_LUMINANCE, Image.NUMPY_2_GL_TYPE_MAP[imgType], imgString)
 
 
     def render(self, scaleAxes):
