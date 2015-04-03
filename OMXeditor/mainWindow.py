@@ -268,7 +268,7 @@ class MainWindow(wx.Frame):
 
     @requires_panel
     def OnViewControls(self, panel, event):
-        panel.toggleViewsWindow()
+        panel.showViewsWindow()
 
     @requires_panel
     def OnAutoAlign(self, panel, event):
@@ -454,9 +454,7 @@ class ControlPanel(wx.Panel):
         ## Allows user to customize the views they see, e.g. add kymographs,
         # or take projections of views.
         self.viewControlWindow = viewerWindow.ViewControlWindow(self,
-                self.dataDoc,
-                title = 'View Controls',
-                style = wx.RESIZE_BORDER | wx.CAPTION)
+                self.dataDoc, title = 'View Controls')
         self.viewControlWindow.SetPosition((10, 40))
         self.viewControlWindow.Hide()
 
@@ -1008,10 +1006,9 @@ class ControlPanel(wx.Panel):
             self.viewControlWindow.Raise()
 
 
-    ## Show/hide our views control window.
-    def toggleViewsWindow(self):
-        self.viewControlWindow.Show(not self.viewControlWindow.IsShown())
-        self.wasViewsWindowShown = self.viewControlWindow.IsShown()
+    def showViewsWindow(self):
+        """Show our views control window."""
+        self.viewControlWindow.Show()
 
 
     ## Change the projection mode for the window with the specified axes.

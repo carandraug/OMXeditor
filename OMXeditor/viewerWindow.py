@@ -57,8 +57,16 @@ class ViewControlWindow(wx.Frame):
                 self.axisToSliderMap[axis] = self.makeSliderControl(sliderSizer, axis)
         sizer.Add(sliderSizer)
 
+        self.Bind(wx.EVT_CLOSE, self.on_close)
         self.SetSizerAndFit(sizer)
 
+    def on_close(self, event):
+        """Hide instead of closing.
+
+        Closing this window does not actually destroy it.  This window must
+        be kept for as a long as the image that it controls is still open.
+        """
+        self.Hide()
 
     def makeViewerPanel(self, axes, isVisibleByDefault):
         """Create a panel that provides view options for a single viewer:
