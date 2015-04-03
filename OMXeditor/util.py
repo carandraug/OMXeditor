@@ -18,23 +18,36 @@ KEY_MOTION_MAP = {
 }
 
 
-# Convert wavelength (nm) into (R,G,B) tuple for approx color.
 def waveToRGB(wave):
+    """Convert wavelength (nm) into (R,G,B) tuple.
+
+    Fortran code http://www.physics.sfasu.edu/astro/color/spectra.html
     """
-    Convert wavelength (nm) into (R,G,B) tuple for approx color.
-    """
-    # "python style switch" ... using a dictionary - bizarre!
-    RGBtuple = {
-        wave<420 : (0.5,0,1),
-        420<=wave<470 : (0,0,1),
-        470<=wave<500 : (0,1,1),
-        500<=wave<560 : (0,1,0),
-        560<=wave<590 : (1,1,0),
-        590<=wave<620 : (1,0.5,0),
-        620<=wave<670 : (1,0,0),
-        670<=wave : (0.5,0,0)
-        }[1]
-    return RGBtuple
+    if wave < 380:
+        rgb = (0, 0, 0)
+    if wave >= 380 and wave < 440:
+        rgb = ((440 - wave) / 60, 0, 1)
+    elif wave < 490:
+        rgb = (0, (wave - 440) / 50, 1)
+    elif wave < 510:
+        rgb = (0, 1, (510 - wave) /20)
+    elif wave < 580:
+        rgb = ((wave - 510) / 70, 1, 0)
+    elif wave < 645:
+        rgb = (1, (wave - 645) / 65, 0)
+    elif wave < 780:
+        rgb = (1, 0, 0)
+    else:
+        rgb = (0, 0, 0)
+
+    ## Let the intensity SSS fall off near the vision limits
+    if wave > 700:
+        sss = 0.3 + 0.7 * (780.0 - wave) / (780.0 - 700.0)
+    elif wave < 420:
+        sss = 0.3 + 0.7 * (wave - 380.0) / (420.0 - 380.0)
+    else:
+        sss = 1.0
+    return [c * sss for c in rgb]
 
 
 ## Copied from the OMX version.
