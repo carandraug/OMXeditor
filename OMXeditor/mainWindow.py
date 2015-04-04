@@ -3,6 +3,7 @@ import re
 import sys
 import threading
 import traceback
+import pkg_resources
 
 import wx
 import wx.aui
@@ -95,24 +96,41 @@ class MainWindow(wx.Frame):
 
     def create_tool_bar(self):
         """Creates toolbar and returns buttons that require an open file."""
-        toolbar = self.CreateToolBar(style=wx.TB_TEXT | wx.TB_NOICONS)
+        toolbar = self.CreateToolBar()
         ToolBarTools_that_require_open_file = []
 
-        empty_bmp = wx.EmptyBitmap(0, 0)
-        def add_toolbar_tool(slot, label, id=wx.ID_ANY, require_open = True,
-                          *args, **kwargs):
-            ## AddLabelTool is deprecated on 3.0.3, we must use AddTool later
-            qtool = toolbar.AddLabelTool(id, label, empty_bmp, *args, **kwargs)
+        try:
+            art_size = wx.ArtProvider.GetNativeSizeHint(wx.ART_TOOLBAR)
+        except TypeError:
+            ## Seems to be broken at least on 3.0.1, so we set our own default
+            art_size = (32, 32)
+        base_data_path = pkg_resources.resource_filename(__name__, "data")
+        def add_toolbar_tool(slot, label, icon_name, id=wx.ID_ANY,
+                             require_open = True, *args, **kwargs):
+            image = wx.Image(os.path.join(base_data_path, icon_name))
+            image.Rescale(*art_size, quality = wx.IMAGE_QUALITY_HIGH)
+            ## AddLabelTool is deprecated on 3.0.3, we will have to use
+            # AddTool later
+            qtool = toolbar.AddLabelTool(id, label, image.ConvertToBitmap(),
+                                         shortHelp = label, *args, **kwargs)
             self.Bind(wx.EVT_TOOL, slot, qtool)
             if require_open:
                 ToolBarTools_that_require_open_file.append(qtool)
 
-        add_toolbar_tool(self.OnAutoAlign, label = "Auto-Align")
-        add_toolbar_tool(self.OnLoadParams, label = 'Load params')
-        add_toolbar_tool(self.OnExportParams, label = 'Export params')
-        add_toolbar_tool(self.OnBatchProcess, label = 'Batch process')
-        add_toolbar_tool(self.OnSplitMerge, label = 'Split/Merge')
-        add_toolbar_tool(self.OnProjResize, label = 'Proj/Resize')
+        add_toolbar_tool(self.OnLoadParams, "Load parameters",
+                         "load-parameters.png")
+        add_toolbar_tool(self.OnExportParams, "Export parameters",
+                         "export-parameters.png")
+        toolbar.AddSeparator()
+        add_toolbar_tool(self.OnViewControls, "Show view controls",
+                         "view-controls.png")
+        add_toolbar_tool(self.OnSplitMerge, "Split/Merge", "split-merge.png")
+        add_toolbar_tool(self.OnProjResize, "Project/Resize",
+                         "project-resize.png")
+        toolbar.AddSeparator()
+        add_toolbar_tool(self.OnAutoAlign, "Auto-Align", "auto-align.png")
+        add_toolbar_tool(self.OnBatchProcess, "Batch process",
+                         "batch-process.png")
         toolbar.Realize()
         return ToolBarTools_that_require_open_file
 
@@ -324,6 +342,7 @@ class MainWindow(wx.Frame):
         info.AddDeveloper("Chris Weisiger")
         info.AddDeveloper("Graeme Ball")
         info.AddDeveloper("David Pinto")
+        info.AddArtist("Freepik (http://www.freepik.com/)")
         wx.AboutBox(info)
 
 
