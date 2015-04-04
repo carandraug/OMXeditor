@@ -427,10 +427,8 @@ class ControlPanel(wx.Panel):
         # and XY views, indices 1 and 2 respectively, do we make adjustments.
         if len(self.windows) > 1:
             rect0 = self.windows[0].GetRect()
-            rect2 = self.windows[2].GetRect()
-            self.windows[0].SetPosition((rect0[0] + rect2[2], rect0[1]))
-            self.windows[1].SetPosition((rect0[0] + rect2[2], rect0[1] + rect0[3]))
-            self.windows[2].SetPosition((rect0[0], rect0[1]))
+            self.windows[1].SetPosition((rect0[0], rect0[1] + rect0[3]))
+            self.windows[2].SetPosition((rect0[0] + rect0[2], rect0[1]))
 
         ## List of canvases showing actual pixels, held in each window.
         self.viewers = [window.viewer for window in self.windows]
