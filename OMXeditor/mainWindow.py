@@ -324,7 +324,68 @@ class MainWindow(wx.Frame):
     def OnBatchProcess(self, panel, event):
         """Apply these cropping and/or alignment parameters to a large
         number of files."""
-        dialogs.BatchDialog(self, panel)
+        batch_dialog = dialogs.BatchDialog(self)
+        if batch_dialog.ShowModal() != wx.ID_OK:
+            return
+
+        open_dialog = wx.FileDialog(self, "Please select files to modify",
+                                    wildcard = ("DV and MRC files|*.dv;*.mrc|"
+                                                "All files|*"),
+                                    style = (wx.FD_OPEN | wx.FD_FILE_MUST_EXIST
+                                             | wx.FD_MULTIPLE))
+        if open_dialog.ShowModal() != wx.ID_OK:
+            return
+
+        filepaths = open_dialog.GetPaths()
+
+        do_align = batch_dialog.do_align()
+        do_crop = batch_dialog.do_crop()
+        alignParams = self.dataDoc.alignParams
+        cropMin = self.dataDoc.cropMin
+        cropMax = self.dataDoc.cropMax
+        cropSize = cropMax - cropMin
+        initialShape = self.dataDoc.size
+
+        progress = wx.ProgressDialog(self, title = "OMXeditor batch processing",
+                                     message = "", maximum = len(filepaths),
+                                     style = (wx.PD_AUTO_HIDE
+                                              | wx.PD_ESTIMATED_TIME
+                                              | wx.PD_REMAINING_TIME
+                                              | wx.PD_SMOOTH))
+        progress.Show()
+        for (i, filepath) in enumerate(filepaths):
+            progress.Update(i, os.path.basename(filepath))
+            doc = datadoc.DataDoc(filepath)
+            if do_crop:
+                ## Scale the cropbox's position in Z so that it's the same
+                # proportionate distance from the top of the Z stack as the
+                # original cropping job was.
+                heightScale = ((doc.size[2] - cropSize[0])
+                               / float(initialShape[2] - cropSize[0]))
+                newBoxMin = numpy.array(cropMin)
+                newBoxMax = numpy.array(cropMax)
+                newBoxMin[0] = int(newBoxMin[0] * heightScale)
+                newBoxMax[0] = newBoxMin[0] + cropSize[0]
+                doc.cropMin = newBoxMin
+                doc.cropMax = newBoxMax
+            if do_align:
+                ## We do this one row at a time so that users can align a subset
+                # of the wavelengths of their files if they so choose, or
+                # use a source file that has more wavelengths than the target
+                # file.
+                for (j, row) in enumerate(alignParams):
+                    doc.alignParams[j] = row
+                    if j == len(doc.alignParams) - 1:
+                        break
+            froot, fext = os.path.splitext(filepath)
+            tag = "";
+            if do_crop:
+                tag += "_ECR"
+            if do_align:
+                tag += "_EAL"
+            doc.alignAndCrop(savePath = froot + tag + fext)
+        progress.Update(len(filepaths), "Finished")
+
 
     def OnAbout(self, event):
         info = wx.AboutDialogInfo()
